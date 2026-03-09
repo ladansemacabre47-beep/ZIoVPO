@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/test/**").permitAll()
                         .requestMatchers("/licenses/create").hasRole("ADMIN")
                         .requestMatchers("/licenses/activate").hasRole("USER")
                         .requestMatchers("/licenses/check").hasRole("USER")

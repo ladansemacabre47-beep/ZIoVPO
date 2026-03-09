@@ -7,13 +7,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.security.KeyStore;
-import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.Signature;
 import java.util.Base64;
 
-
 @Service
-public class TicketSignerService {
+public class TicketVerifierService {
 
     @Value("${license.keystore.path}")
     private String keystorePath;
@@ -27,7 +26,7 @@ public class TicketSignerService {
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule());
 
-    public String sign(Ticket ticket) {
+    public boolean verify(Ticket ticket, String signatureBase64) {
         try {
             String data = objectMapper.writeValueAsString(ticket);
 
@@ -37,19 +36,16 @@ public class TicketSignerService {
                     keystorePassword.toCharArray()
             );
 
-            PrivateKey privateKey = (PrivateKey) keyStore.getKey(
-                    keyAlias,
-                    keystorePassword.toCharArray()
-            );
+            PublicKey publicKey = keyStore.getCertificate(keyAlias).getPublicKey();
 
             Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(privateKey);
+            signature.initVerify(publicKey);
             signature.update(data.getBytes());
 
-            return Base64.getEncoder().encodeToString(signature.sign());
+            return signature.verify(Base64.getDecoder().decode(signatureBase64));
 
         } catch (Exception e) {
-            throw new RuntimeException("Error signing ticket", e);
+            throw new RuntimeException("Error verifying ticket signature", e);
         }
     }
 }
