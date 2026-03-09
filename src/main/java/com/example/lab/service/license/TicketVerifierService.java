@@ -1,46 +1,34 @@
 package com.example.lab.service.license;
 
 import com.example.lab.dto.license.Ticket;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.security.KeyStore;
-import java.security.PublicKey;
 import java.security.Signature;
 import java.util.Base64;
 
 @Service
 public class TicketVerifierService {
 
-    @Value("${license.keystore.path}")
-    private String keystorePath;
+    @Value("${license.signature.algorithm:SHA256withRSA}")
+    private String signatureAlgorithm;
 
-    @Value("${license.keystore.password}")
-    private String keystorePassword;
+    private final SignatureKeyProvider keyProvider;
+    private final JsonCanonicalizationService canonicalizationService;
 
-    @Value("${license.key.alias}")
-    private String keyAlias;
-
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
+    public TicketVerifierService(SignatureKeyProvider keyProvider,
+                                 JsonCanonicalizationService canonicalizationService) {
+        this.keyProvider = keyProvider;
+        this.canonicalizationService = canonicalizationService;
+    }
 
     public boolean verify(Ticket ticket, String signatureBase64) {
         try {
-            String data = objectMapper.writeValueAsString(ticket);
+            byte[] canonicalBytes = canonicalizationService.canonicalize(ticket);
 
-            KeyStore keyStore = KeyStore.getInstance("PKCS12");
-            keyStore.load(
-                    getClass().getClassLoader().getResourceAsStream(keystorePath),
-                    keystorePassword.toCharArray()
-            );
-
-            PublicKey publicKey = keyStore.getCertificate(keyAlias).getPublicKey();
-
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initVerify(publicKey);
-            signature.update(data.getBytes());
+            Signature signature = Signature.getInstance(signatureAlgorithm);
+            signature.initVerify(keyProvider.getPublicKey());
+            signature.update(canonicalBytes);
 
             return signature.verify(Base64.getDecoder().decode(signatureBase64));
 
