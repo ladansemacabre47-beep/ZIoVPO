@@ -1,0 +1,24 @@
+# Default ignored files
+/shelf/
+/.idea/workspace.xml
+.env
+
+*.pfx
+*.cer
+*.jks
+*.p12
+
+src/main/resources/data.sql
+
+.idea/
+*.iml
+*.iws
+*.ipr
+
+target/
+
+*.log
+logs/
+
+.DS_Store
+Thumbs.db
