@@ -16,59 +16,34 @@ public class LicenseController {
         this.licenseService = licenseService;
     }
 
-    // создание лицензии
     @PostMapping("/create")
     public LicenseResponse create(@RequestBody CreateLicenseRequest request) {
-
         License license = licenseService.create(request);
-
         return new LicenseResponse(
                 license.getId(),
                 license.getLicenseKey(),
                 license.getFirstActivationDate(),
                 license.getEndingDate(),
-                license.isBlocked()
+                license.isBlocked(),
+                null
         );
     }
 
-    // активация лицензии
     @PostMapping("/activate")
     public TicketResponse activate(
             @RequestBody ActivateLicenseRequest request,
             Authentication authentication
     ) {
-
-        String username = authentication.getName();
-
-        return licenseService.activate(request, username);
+        return licenseService.activate(request, authentication.getName());
     }
 
-    // проверка лицензии
     @PostMapping("/check")
     public LicenseCheckResponse check(@RequestBody LicenseCheckRequest request) {
-
-        License license = licenseService.check(request);
-
-        return new LicenseCheckResponse(
-                license.getLicenseKey(),
-                license.getFirstActivationDate(),
-                license.getEndingDate(),
-                license.isBlocked()
-        );
+        return licenseService.check(request);
     }
 
-    // продление лицензии
     @PostMapping("/renew")
     public LicenseResponse renew(@RequestBody RenewLicenseRequest request) {
-
-        License license = licenseService.renew(request);
-
-        return new LicenseResponse(
-                license.getId(),
-                license.getLicenseKey(),
-                license.getFirstActivationDate(),
-                license.getEndingDate(),
-                license.isBlocked()
-        );
+        return licenseService.renew(request);
     }
 }

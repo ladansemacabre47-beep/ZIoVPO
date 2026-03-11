@@ -1,50 +1,34 @@
 package com.example.lab.service.license;
 
 import com.example.lab.dto.license.Ticket;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.security.KeyStore;
-import java.security.PrivateKey;
 import java.security.Signature;
 import java.util.Base64;
-
 
 @Service
 public class TicketSignerService {
 
-    @Value("${license.keystore.path}")
-    private String keystorePath;
+    @Value("${license.signature.algorithm:SHA256withRSA}")
+    private String signatureAlgorithm;
 
-    @Value("${license.keystore.password}")
-    private String keystorePassword;
+    private final SignatureKeyProvider keyProvider;
+    private final JsonCanonicalizationService canonicalizationService;
 
-    @Value("${license.key.alias}")
-    private String keyAlias;
-
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
+    public TicketSignerService(SignatureKeyProvider keyProvider,
+                               JsonCanonicalizationService canonicalizationService) {
+        this.keyProvider = keyProvider;
+        this.canonicalizationService = canonicalizationService;
+    }
 
     public String sign(Ticket ticket) {
         try {
-            String data = objectMapper.writeValueAsString(ticket);
+            byte[] canonicalBytes = canonicalizationService.canonicalize(ticket);
 
-            KeyStore keyStore = KeyStore.getInstance("PKCS12");
-            keyStore.load(
-                    getClass().getClassLoader().getResourceAsStream(keystorePath),
-                    keystorePassword.toCharArray()
-            );
-
-            PrivateKey privateKey = (PrivateKey) keyStore.getKey(
-                    keyAlias,
-                    keystorePassword.toCharArray()
-            );
-
-            Signature signature = Signature.getInstance("SHA256withRSA");
-            signature.initSign(privateKey);
-            signature.update(data.getBytes());
+            Signature signature = Signature.getInstance(signatureAlgorithm);
+            signature.initSign(keyProvider.getPrivateKey());
+            signature.update(canonicalBytes);
 
             return Base64.getEncoder().encodeToString(signature.sign());
 

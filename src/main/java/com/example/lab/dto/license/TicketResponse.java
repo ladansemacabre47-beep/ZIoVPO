@@ -11,6 +11,7 @@ public class TicketResponse {
     private Long userId;
     private Long deviceId;
     private boolean blocked;
+    private String signature;
 
     public TicketResponse(
             LocalDateTime serverTime,
@@ -19,7 +20,8 @@ public class TicketResponse {
             LocalDateTime licenseEnd,
             Long userId,
             Long deviceId,
-            boolean blocked
+            boolean blocked,
+            String signature
     ) {
         this.serverTime = serverTime;
         this.lifetime = lifetime;
@@ -28,33 +30,15 @@ public class TicketResponse {
         this.userId = userId;
         this.deviceId = deviceId;
         this.blocked = blocked;
+        this.signature = signature;
     }
 
-    public LocalDateTime getServerTime() {
-        return serverTime;
-    }
-
-    public long getLifetime() {
-        return lifetime;
-    }
-
-    public LocalDateTime getLicenseStart() {
-        return licenseStart;
-    }
-
-    public LocalDateTime getLicenseEnd() {
-        return licenseEnd;
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public Long getDeviceId() {
-        return deviceId;
-    }
-
-    public boolean isBlocked() {
-        return blocked;
-    }
+    public LocalDateTime getServerTime() { return serverTime; }
+    public long getLifetime() { return lifetime; }
+    public LocalDateTime getLicenseStart() { return licenseStart; }
+    public LocalDateTime getLicenseEnd() { return licenseEnd; }
+    public Long getUserId() { return userId; }
+    public Long getDeviceId() { return deviceId; }
+    public boolean isBlocked() { return blocked; }
+    public String getSignature() { return signature; }
 }
