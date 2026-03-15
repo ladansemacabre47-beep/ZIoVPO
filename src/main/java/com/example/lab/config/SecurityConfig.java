@@ -45,7 +45,21 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/test/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
+
+                        // Signatures — чтение доступно всем авторизованным
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/signatures").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/signatures/increment").hasAnyRole("ADMIN", "USER")
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/signatures/by-ids").hasAnyRole("ADMIN", "USER")
+
+                        // Signatures — запись только ADMIN
+                        .requestMatchers(org.springframework.http.HttpMethod.POST, "/signatures").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.PUT, "/signatures/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.DELETE, "/signatures/**").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/signatures/*/history").hasRole("ADMIN")
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/signatures/*/audit").hasRole("ADMIN")
+
+                        // Licenses
                         .requestMatchers("/licenses/create").hasRole("ADMIN")
                         .requestMatchers("/licenses/activate").hasRole("USER")
                         .requestMatchers("/licenses/check").hasRole("USER")
